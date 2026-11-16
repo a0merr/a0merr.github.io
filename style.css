@@ -529,6 +529,9 @@ h1 {
   background: none;
   color: inherit;
   font-size: inherit;
+  /* Inline code is nowrap, which collapses runs of spaces; the YAML's
+   * indentation needs <pre>'s whitespace back. */
+  white-space: pre;
   counter-reset: ln;
 }
 
