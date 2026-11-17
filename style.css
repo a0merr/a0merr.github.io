@@ -41,6 +41,10 @@
   --accent-soft: #e2f1ee;
   --grid: rgb(16 18 23 / 0.07);
   --shadow: 0 1px 2px rgb(16 18 23 / 0.04), 0 12px 32px -16px rgb(16 18 23 / 0.16);
+  /* Chart bars. The accent itself is too gray for a data mark in light mode
+   * and too light in dark; these are the nearest teals that pass the
+   * colour checks against the card surface. */
+  --chart: #0c8b79;
 
   /* The rule card is a terminal in both themes. */
   --code-bg: #0d1116;
@@ -74,6 +78,7 @@
     --accent-soft: rgb(95 212 196 / 0.1);
     --grid: rgb(255 255 255 / 0.06);
     --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 16px 40px -20px rgb(0 0 0 / 0.7);
+    --chart: #22a897;
     --code-bg: #07090c;
   }
 }
@@ -625,6 +630,50 @@ h1 {
 
 .term .p { color: var(--code-dim); }
 .term .c { color: var(--code-crit); }
+.term .k { color: var(--code-key); }
+
+/* A terminal wider than its window scrolls sideways (on a phone, mostly).
+ * The edge it can still scroll toward fades out, which reads as "more this
+ * way". The fade follows the pre's own scroll position; a pre that fits has
+ * no scroll range, so its animation never runs and nothing fades. */
+@property --fade-l {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --fade-r {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@supports (animation-timeline: scroll()) {
+  .rule pre,
+  .term pre {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--fade-l), #000 calc(100% - var(--fade-r)), transparent);
+    mask-image: linear-gradient(to right, transparent, #000 var(--fade-l), #000 calc(100% - var(--fade-r)), transparent);
+    animation: edge-fade linear both;
+    animation-timeline: scroll(self inline);
+  }
+
+  /* Not motion: nothing moves that the visitor isn't scrolling themselves.
+   * So it stays on when reduced motion turns every other animation off. */
+  @media (prefers-reduced-motion: reduce) {
+    .rule pre,
+    .term pre {
+      animation: edge-fade linear both !important;
+      animation-timeline: scroll(self inline) !important;
+    }
+  }
+}
+
+@keyframes edge-fade {
+  0% { --fade-l: 0px; --fade-r: 56px; }
+  8% { --fade-l: 56px; }
+  92% { --fade-r: 56px; }
+  100% { --fade-l: 56px; --fade-r: 0px; }
+}
 
 /* The table header. siglint prints a row of dashes under it; a border says
  * the same thing without setting the table's width. */
@@ -900,6 +949,158 @@ h2 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
+}
+
+.cards .term {
+  margin-block: 4px;
+}
+
+/* ---- Walk-forward chart (axiom-backtest card) ----- */
+
+/* Columns of out-of-sample Sharpe, one per fold, on a scale from -1.5 to 3.
+ * Built from HTML, not SVG, so the labels stay a readable size however
+ * narrow the card gets; only the bars stretch. */
+.wf {
+  --u: 28px; /* height of one unit of Sharpe */
+  position: relative;
+  z-index: 1; /* above the card's link overlay, so the bars' tooltips work */
+  display: grid;
+  gap: 12px;
+  margin: 4px 0;
+  padding: 16px 18px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.wf figcaption {
+  color: var(--muted);
+  font: 0.75rem/1.4 var(--mono);
+}
+
+.wf-plot {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  column-gap: 8px;
+  padding-top: 16px; /* headroom for the label over the tallest bar */
+}
+
+.wf-y {
+  position: relative;
+  height: calc(4.5 * var(--u));
+  color: var(--muted);
+  font: 0.68rem/1 var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.wf-y span {
+  position: absolute;
+  right: 0;
+  translate: 0 -50%;
+}
+
+/* Ticks at 3, 2, 1, 0 and -1, one unit apart from the top. */
+.wf-y span:nth-child(2) { top: var(--u); }
+.wf-y span:nth-child(3) { top: calc(2 * var(--u)); }
+.wf-y span:nth-child(4) { top: calc(3 * var(--u)); }
+.wf-y span:nth-child(5) { top: calc(4 * var(--u)); }
+
+.wf-bars {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  height: calc(4.5 * var(--u));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  /* A hairline at every whole unit, 3 down to -1. */
+  background: repeating-linear-gradient(to bottom, var(--line) 0 1px, transparent 1px var(--u)) top / 100% calc(4 * var(--u) + 1px) no-repeat;
+}
+
+/* The zero line, a step stronger than the grid. */
+.wf-bars::before {
+  content: "";
+  position: absolute;
+  inset: calc(3 * var(--u)) 0 auto;
+  height: 1px;
+  background: color-mix(in srgb, var(--muted) 55%, transparent);
+}
+
+.wf-bars li {
+  position: relative;
+}
+
+/* Each bar grows from the zero line - 1.5 units up from the bottom - by
+ * --v units, with its free end rounded. */
+.wf-bars i {
+  position: absolute;
+  left: 50%;
+  bottom: calc(1.5 * var(--u));
+  width: min(18px, 64%);
+  height: calc(var(--v) * var(--u));
+  translate: -50% 0;
+  border-radius: 4px 4px 0 0;
+  background: var(--chart);
+}
+
+.wf-bars .neg i {
+  top: calc(3 * var(--u) + 1px);
+  bottom: auto;
+  border-radius: 0 0 4px 4px;
+}
+
+.wf-bars li:hover i {
+  background: color-mix(in srgb, var(--chart) 80%, var(--ink));
+}
+
+/* The data, from docs/CASE_STUDY.md. Negative folds give their size; the
+ * .neg class hangs them below the line. */
+.wf-bars li:nth-child(1) { --v: 1.03; }
+.wf-bars li:nth-child(2) { --v: 0.64; }
+.wf-bars li:nth-child(3) { --v: 1.04; }
+.wf-bars li:nth-child(4) { --v: 2.86; }
+.wf-bars li:nth-child(5) { --v: 1.78; }
+.wf-bars li:nth-child(6) { --v: 0.96; }
+.wf-bars li:nth-child(7) { --v: 0.06; }
+.wf-bars li:nth-child(8) { --v: 0.76; }
+.wf-bars li:nth-child(9) { --v: 0.68; }
+.wf-bars li:nth-child(10) { --v: 0.16; }
+
+/* Direct labels, on the two extremes only. Text tokens, not the bar colour. */
+.wf-bars b {
+  position: absolute;
+  bottom: calc(100% + 3px);
+  left: 50%;
+  translate: -50% 0;
+  color: var(--ink);
+  font: 600 0.72rem/1 var(--sans);
+  white-space: nowrap;
+}
+
+.wf-bars .neg b {
+  top: calc(100% + 3px);
+  bottom: auto;
+}
+
+.wf-x {
+  grid-column: 2;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  padding-top: 8px;
+  color: var(--muted);
+  font: 0.68rem/1 var(--mono);
+  text-align: center;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 @media (max-width: 780px) {
@@ -1345,6 +1546,7 @@ h2 {
     --line-strong: #c9c6bd;
     --accent: #0b7366;
     --accent-soft: #e2f1ee;
+    --chart: #0c8b79;
     --shadow: none;
   }
 
@@ -1356,9 +1558,12 @@ h2 {
     transition: none !important;
   }
 
-  /* Browsers drop backgrounds on paper; these two carry meaning. */
+  /* Browsers drop backgrounds on paper; these carry meaning. */
   .points li::before,
-  .badge {
+  .badge,
+  .wf-bars,
+  .wf-bars::before,
+  .wf-bars i {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
@@ -1414,6 +1619,7 @@ h2 {
 
   .card,
   .oss,
+  .wf,
   .timeline > li,
   .rows > div,
   .stats > div {

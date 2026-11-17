@@ -18,8 +18,14 @@ the section on screen are scroll-driven animations and scroll markers - see
 "Scroll-driven polish" in `style.css`. Browsers without those features, and
 visitors who ask for reduced motion, get the same page standing still.
 
-The terminal in the siglint card is the demo run from that repo's README,
-copied verbatim. If the tool's output changes there, update it here.
+The project cards carry real output, copied by hand, so they need updating
+when the projects change:
+
+- **siglint** - the demo run from that repo's README, verbatim.
+- **autolab** - `python quickstart.py` run in a clone, trimmed where marked.
+- **axiom-backtest** - the walk-forward chart plots the per-fold OOS Sharpe
+  from `docs/CASE_STUDY.md`. The bar heights live in `style.css` (the policy
+  blocks `style=""`), the values in `index.html`'s tooltips and table.
 
 | File | Purpose |
 |---|---|
