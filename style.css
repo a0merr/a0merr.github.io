@@ -34,7 +34,7 @@
   --ink: #101217;
   --ink-2: #2b2f38;
   --muted: #5c6270;
-  --faint: #9096a3;
+  --faint: #6a707e; /* still text (section numbers, labels): 4.5:1 minimum */
   --line: #e8e7e2;
   --line-strong: #d7d5ce;
   --accent: #0b7366;
@@ -66,7 +66,7 @@
     --ink: #eceef2;
     --ink-2: #c8cdd7;
     --muted: #949bab;
-    --faint: #687082;
+    --faint: #788092;
     --line: #1d232c;
     --line-strong: #2a313c;
     --accent: #5fd4c4;
@@ -202,6 +202,7 @@ cite {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--accent);
+  text-wrap: balance;
 }
 
 .eyebrow span {
@@ -373,9 +374,16 @@ nav {
   background: var(--bg-soft);
 }
 
+/* Phones: the section links drop to a slim second row rather than
+ * disappearing, so a long page stays navigable with no script. */
 @media (max-width: 720px) {
-  nav { display: none; }
+  html { scroll-padding-top: 108px; }
+  .header-row { flex-wrap: wrap; gap: 0 16px; min-height: 0; padding-top: 10px; }
   .header-row > .btn { margin-left: auto; }
+  /* order: the nav precedes the Resume button in the markup. */
+  nav { order: 1; flex: 0 0 100%; margin: 8px 0 0; border-top: 1px solid var(--line); }
+  .nav-links { justify-content: space-between; gap: 0; margin-inline: -10px; }
+  .nav-links a { padding: 10px; font-size: 0.86rem; }
 }
 
 /* ---- Hero -------------------------------------------------------------- */
@@ -977,6 +985,13 @@ h2 {
   margin-top: 6px;
 }
 
+/* In a narrow column the place takes its own line, so a wrapped heading
+ * never starts with the separator dot. */
+@media (max-width: 900px) {
+  .timeline .at { display: block; margin: 5px 0 0; font-size: 1rem; line-height: 1.35; }
+  .timeline .at::before { content: none; }
+}
+
 @media (max-width: 700px) {
   .timeline > li { grid-template-columns: minmax(0, 1fr); }
 }
@@ -1113,6 +1128,9 @@ h2 {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  /* Padding for a 24px+ tap target; the negative margin keeps the row height. */
+  padding-block: 4px;
+  margin-block: -4px;
   color: var(--muted);
   text-decoration: none;
 }
@@ -1139,4 +1157,93 @@ h2 {
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* ---- Print ------------------------------------------------------------- */
+
+/* For anyone who prints the page or saves it as a PDF: always the light
+ * palette, none of the screen chrome, and link destinations spelled out. */
+@media print {
+  :root {
+    color-scheme: light;
+    --bg: #fff;
+    --bg-soft: #f4f4f1;
+    --surface: #fff;
+    --ink: #101217;
+    --ink-2: #2b2f38;
+    --muted: #4a4f5b;
+    --faint: #6a707e;
+    --line: #dcdad3;
+    --line-strong: #c9c6bd;
+    --accent: #0b7366;
+    --accent-soft: #e2f1ee;
+    --shadow: none;
+  }
+
+  /* Sizes are in rem, so scaling the root scales the whole page. */
+  html { scroll-behavior: auto; font-size: 85%; }
+
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* Browsers drop backgrounds on paper; these two carry meaning. */
+  .points li::before,
+  .badge {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .site-header,
+  .skip,
+  .rule,
+  .actions,
+  .pulse,
+  .card-arrow,
+  .hero::before,
+  .hero::after,
+  .contact-section::before,
+  .email .icon,
+  /* The address is printed in full under Contact. */
+  .hero .social li:has(a[href^="mailto:"]),
+  .site-footer p:last-child {
+    display: none;
+  }
+
+  .hero { padding-block: 0 20pt; }
+  .hero-grid { grid-template-columns: minmax(0, 1fr); }
+  .stats { margin-top: 20pt; }
+  .section { padding-block: 22pt; }
+  .section-head { margin-bottom: 14pt; }
+  .featured { background: var(--surface); }
+  .status { box-shadow: none; }
+
+  /* Block flow paginates better than a grid: a card moves to the next page
+   * only when it truly doesn't fit. */
+  .cards { display: block; }
+  .cards > .card + .card { margin-top: 12pt; }
+  .card { padding: 16pt; }
+
+  .card,
+  .oss,
+  .timeline > li,
+  .rows > div,
+  .stats > div {
+    break-inside: avoid;
+  }
+
+  h2, h3 { break-after: avoid; }
+
+  main a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    color: var(--muted);
+    font: 400 8pt/1.4 var(--mono);
+    letter-spacing: 0;
+    overflow-wrap: anywhere;
+  }
+
+  /* On screen this pseudo-element is the card-sized click overlay; on paper
+   * it goes back into the text flow to carry the URL above. */
+  .stretched::after { position: static; }
 }
