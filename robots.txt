@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://a0merr.github.io/sitemap.xml

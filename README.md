@@ -9,16 +9,22 @@ meta tag in each page enforces that, so adding a CDN font, analytics snippet
 or inline `style=""` attribute will be **blocked by the browser** until the
 policy is updated to allow it.
 
+The one `<script>` tag in `index.html` is a JSON-LD block: structured data
+for search engines, which browsers never execute.
+
 | File | Purpose |
 |---|---|
 | `index.html` | The whole site. Edit content here. |
-| `style.css` | All styling. Light/dark follows the visitor's OS setting. |
+| `style.css` | All styling. Light/dark follows the visitor's OS setting; a print stylesheet at the end covers paper and save-as-PDF. |
 | `404.html` | Served by GitHub Pages for any unknown path. |
 | `favicon.svg` | Tab icon. |
+| `favicon.ico`, `apple-touch-icon.png` | The same icon for clients that can't use an SVG, and for the iOS home screen. Re-export both if `favicon.svg` changes. |
+| `robots.txt`, `sitemap.xml` | Point search engines at the one page. |
 | `fonts/` | Geist and Geist Mono (Latin subset, variable weight), from Fontsource 5.3.0. SIL Open Font License; license texts alongside. |
 | `og.png` | 1200×630 preview image shown when the link is shared (LinkedIn, Slack…). |
 | `og-card.html` | Source for `og.png`; the regenerate command is in its header comment. |
 | `.nojekyll` | Tells Pages to serve files as-is instead of running Jekyll. |
+| `.github/` | A link check (on every change and weekly) and Dependabot for the actions it pins. |
 
 ## Preview locally
 

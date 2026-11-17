@@ -1,0 +1,41 @@
+name: Links
+
+# Checks every link on the site. Runs on each change, and weekly as well,
+# because outbound links rot without anything changing in this repo.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "17 9 * * 1" # Mondays, 09:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: links-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lychee:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # Actions are pinned to a full commit SHA; Dependabot keeps them current.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
+        with:
+          # --root-dir resolves the root-relative paths in 404.html.
+          # LinkedIn answers every automated request with HTTP 999, so it
+          # can't be checked from CI.
+          args: >-
+            --root-dir "$(pwd)"
+            --no-progress
+            --max-retries 3
+            --exclude '^https://www\.linkedin\.com/'
+            index.html 404.html
+          fail: true
