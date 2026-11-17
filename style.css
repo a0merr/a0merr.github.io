@@ -41,6 +41,10 @@
   --accent-soft: #e2f1ee;
   --grid: rgb(16 18 23 / 0.07);
   --shadow: 0 1px 2px rgb(16 18 23 / 0.04), 0 12px 32px -16px rgb(16 18 23 / 0.16);
+  /* Chart bars. The accent itself is too gray for a data mark in light mode
+   * and too light in dark; these are the nearest teals that pass the
+   * colour checks against the card surface. */
+  --chart: #0c8b79;
 
   /* The rule card is a terminal in both themes. */
   --code-bg: #0d1116;
@@ -50,6 +54,7 @@
   --code-key: #5eead4;
   --code-val: #fbbf24;
   --code-str: #a9b8cc;
+  --code-crit: #ff8f85;
 
   --radius: 16px;
   --sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -73,6 +78,7 @@
     --accent-soft: rgb(95 212 196 / 0.1);
     --grid: rgb(255 255 255 / 0.06);
     --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 16px 40px -20px rgb(0 0 0 / 0.7);
+    --chart: #22a897;
     --code-bg: #07090c;
   }
 }
@@ -374,6 +380,19 @@ nav {
   background: var(--bg-soft);
 }
 
+/* Marks the link for the section on screen. This is scroll-marker CSS, not
+ * script; a browser without it shows no marker and loses nothing else. The
+ * group sits on the whole row so the brand link (#top) owns the hero - with
+ * only the section links in it, "About" would light up before you got there. */
+.header-row {
+  scroll-target-group: auto;
+}
+
+.nav-links a:target-current {
+  color: var(--ink);
+  background: var(--bg-soft);
+}
+
 /* Phones: the section links drop to a slim second row rather than
  * disappearing, so a long page stays navigable with no script. */
 @media (max-width: 720px) {
@@ -382,8 +401,16 @@ nav {
   .header-row > .btn { margin-left: auto; }
   /* order: the nav precedes the Resume button in the markup. */
   nav { order: 1; flex: 0 0 100%; margin: 8px 0 0; border-top: 1px solid var(--line); }
-  .nav-links { justify-content: space-between; gap: 0; margin-inline: -10px; }
-  .nav-links a { padding: 10px; font-size: 0.86rem; }
+  .nav-links { justify-content: space-between; gap: 0; margin-inline: -8px; }
+  .nav-links a { padding: 10px 8px; font-size: 0.86rem; }
+  /* A pill behind every link would crowd the row; mark the current one
+   * with weight alone. */
+  .nav-links a:target-current { background: none; font-weight: 550; }
+}
+
+@media (max-width: 359px) {
+  .nav-links { margin-inline: -4px; }
+  .nav-links a { padding-inline: 4px; font-size: 0.8rem; }
 }
 
 /* ---- Hero -------------------------------------------------------------- */
@@ -489,8 +516,10 @@ h1 {
   to { transform: scale(3.2); opacity: 0; }
 }
 
-/* The Sigma-rule card */
-.rule {
+/* The terminal windows: the Sigma-rule card here in the hero (.rule) and the
+ * siglint demo in the featured project (.term). They share the chrome. */
+.rule,
+.term {
   margin: 0;
   min-width: 0;
   border: 1px solid var(--code-line);
@@ -501,7 +530,8 @@ h1 {
   overflow: hidden;
 }
 
-.rule figcaption {
+.rule figcaption,
+.term figcaption {
   display: flex;
   align-items: center;
   gap: 14px;
@@ -523,14 +553,16 @@ h1 {
   background: var(--code-line);
 }
 
-.rule pre {
+.rule pre,
+.term pre {
   margin: 0;
   padding: 18px 20px 20px 0;
   overflow-x: auto;
   font: 0.82rem/1.75 var(--mono);
 }
 
-.rule code {
+.rule code,
+.term code {
   display: block;
   padding: 0;
   border: 0;
@@ -538,13 +570,20 @@ h1 {
   color: inherit;
   font-size: inherit;
   /* Inline code is nowrap, which collapses runs of spaces; the YAML's
-   * indentation needs <pre>'s whitespace back. */
+   * indentation and the table's columns need <pre>'s whitespace back. */
   white-space: pre;
+}
+
+.rule code {
   counter-reset: ln;
 }
 
-.rule .l {
+.rule .l,
+.term .l {
   display: block;
+}
+
+.rule .l {
   counter-increment: ln;
 }
 
@@ -559,8 +598,91 @@ h1 {
 }
 
 .rule .k { color: var(--code-key); }
-.rule .v { color: var(--code-val); }
-.rule .s { color: var(--code-str); }
+.rule .v, .term .v { color: var(--code-val); }
+.rule .s, .term .s { color: var(--code-str); }
+
+/* The siglint demo. It sits inside a card whose title link is stretched over
+ * the whole card, so it is lifted above that overlay: the text stays
+ * selectable and, on a phone, the table can be swiped sideways. */
+.term {
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 24px 48px -32px rgb(8 12 16 / 0.5);
+}
+
+/* Room to wrap: on the narrowest phones the caption takes two lines. */
+.term figcaption {
+  line-height: 1.4;
+}
+
+.term pre {
+  padding: 16px 18px 18px;
+  font-size: 0.75rem;
+  line-height: 1.7;
+}
+
+/* As wide as the longest line, so the header's rule spans the full table
+ * even when the table is wider than the window and scrolls. */
+.term code {
+  width: max-content;
+  min-width: 100%;
+}
+
+.term .p { color: var(--code-dim); }
+.term .c { color: var(--code-crit); }
+.term .k { color: var(--code-key); }
+
+/* A terminal wider than its window scrolls sideways (on a phone, mostly).
+ * The edge it can still scroll toward fades out, which reads as "more this
+ * way". The fade follows the pre's own scroll position; a pre that fits has
+ * no scroll range, so its animation never runs and nothing fades. */
+@property --fade-l {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --fade-r {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@supports (animation-timeline: scroll()) {
+  .rule pre,
+  .term pre {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--fade-l), #000 calc(100% - var(--fade-r)), transparent);
+    mask-image: linear-gradient(to right, transparent, #000 var(--fade-l), #000 calc(100% - var(--fade-r)), transparent);
+    animation: edge-fade linear both;
+    animation-timeline: scroll(self inline);
+  }
+
+  /* Not motion: nothing moves that the visitor isn't scrolling themselves.
+   * So it stays on when reduced motion turns every other animation off. */
+  @media (prefers-reduced-motion: reduce) {
+    .rule pre,
+    .term pre {
+      animation: edge-fade linear both !important;
+      animation-timeline: scroll(self inline) !important;
+    }
+  }
+}
+
+@keyframes edge-fade {
+  0% { --fade-l: 0px; --fade-r: 56px; }
+  8% { --fade-l: 56px; }
+  92% { --fade-r: 56px; }
+  100% { --fade-l: 56px; --fade-r: 0px; }
+}
+
+/* The table header. siglint prints a row of dashes under it; a border says
+ * the same thing without setting the table's width. */
+.term .h {
+  margin-block: 0.9em 0.5em;
+  padding-bottom: 0.5em;
+  border-bottom: 1px solid var(--code-line);
+  color: var(--code-dim);
+}
 
 /* Stats strip */
 .stats {
@@ -662,6 +784,15 @@ h2 {
 .split .section-head {
   margin-bottom: 0;
   align-content: start;
+}
+
+/* The heading stays alongside while its column of content scrolls past. */
+@media (min-width: 901px) {
+  .split .section-head {
+    position: sticky;
+    top: 104px;
+    align-self: start;
+  }
 }
 
 @media (max-width: 900px) {
@@ -768,10 +899,12 @@ h2 {
   color: var(--muted);
 }
 
+/* Copy on the left, the demo on the right at the width its table needs, and
+ * the three points in a row underneath. */
 .featured {
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
-  gap: clamp(24px, 5vw, 64px);
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: clamp(24px, 4vw, 40px);
   align-items: center;
   margin-bottom: 16px;
   padding: clamp(24px, 4vw, 40px);
@@ -795,27 +928,179 @@ h2 {
   margin-top: 4px;
 }
 
-/* Pinned to the card's corner rather than the end of the left column. */
-.featured .card-arrow {
-  position: absolute;
-  top: clamp(24px, 4vw, 40px);
-  right: clamp(24px, 4vw, 40px);
+.featured > .points {
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px clamp(20px, 3vw, 36px);
+  padding-top: clamp(20px, 3vw, 28px);
+  border-top: 1px solid var(--line);
 }
 
-.featured > .points {
-  padding-left: clamp(0px, 3vw, 40px);
-  border-left: 1px solid var(--line);
+/* Below this the demo's table no longer fits beside the copy. */
+@media (max-width: 1099px) {
+  .featured { grid-template-columns: minmax(0, 1fr); }
 }
 
 @media (max-width: 780px) {
-  .featured { grid-template-columns: minmax(0, 1fr); }
-  .featured > .points { padding-left: 0; border-left: 0; }
+  .featured > .points { grid-template-columns: minmax(0, 1fr); }
 }
 
 .cards {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
+}
+
+.cards .term {
+  margin-block: 4px;
+}
+
+/* ---- Walk-forward chart (axiom-backtest card) ----- */
+
+/* Columns of out-of-sample Sharpe, one per fold, on a scale from -1.5 to 3.
+ * Built from HTML, not SVG, so the labels stay a readable size however
+ * narrow the card gets; only the bars stretch. */
+.wf {
+  --u: 28px; /* height of one unit of Sharpe */
+  position: relative;
+  z-index: 1; /* above the card's link overlay, so the bars' tooltips work */
+  display: grid;
+  gap: 12px;
+  margin: 4px 0;
+  padding: 16px 18px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.wf figcaption {
+  color: var(--muted);
+  font: 0.75rem/1.4 var(--mono);
+}
+
+.wf-plot {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  column-gap: 8px;
+  padding-top: 16px; /* headroom for the label over the tallest bar */
+}
+
+.wf-y {
+  position: relative;
+  height: calc(4.5 * var(--u));
+  color: var(--muted);
+  font: 0.68rem/1 var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.wf-y span {
+  position: absolute;
+  right: 0;
+  translate: 0 -50%;
+}
+
+/* Ticks at 3, 2, 1, 0 and -1, one unit apart from the top. */
+.wf-y span:nth-child(2) { top: var(--u); }
+.wf-y span:nth-child(3) { top: calc(2 * var(--u)); }
+.wf-y span:nth-child(4) { top: calc(3 * var(--u)); }
+.wf-y span:nth-child(5) { top: calc(4 * var(--u)); }
+
+.wf-bars {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  height: calc(4.5 * var(--u));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  /* A hairline at every whole unit, 3 down to -1. */
+  background: repeating-linear-gradient(to bottom, var(--line) 0 1px, transparent 1px var(--u)) top / 100% calc(4 * var(--u) + 1px) no-repeat;
+}
+
+/* The zero line, a step stronger than the grid. */
+.wf-bars::before {
+  content: "";
+  position: absolute;
+  inset: calc(3 * var(--u)) 0 auto;
+  height: 1px;
+  background: color-mix(in srgb, var(--muted) 55%, transparent);
+}
+
+.wf-bars li {
+  position: relative;
+}
+
+/* Each bar grows from the zero line - 1.5 units up from the bottom - by
+ * --v units, with its free end rounded. */
+.wf-bars i {
+  position: absolute;
+  left: 50%;
+  bottom: calc(1.5 * var(--u));
+  width: min(18px, 64%);
+  height: calc(var(--v) * var(--u));
+  translate: -50% 0;
+  border-radius: 4px 4px 0 0;
+  background: var(--chart);
+}
+
+.wf-bars .neg i {
+  top: calc(3 * var(--u) + 1px);
+  bottom: auto;
+  border-radius: 0 0 4px 4px;
+}
+
+.wf-bars li:hover i {
+  background: color-mix(in srgb, var(--chart) 80%, var(--ink));
+}
+
+/* The data, from docs/CASE_STUDY.md. Negative folds give their size; the
+ * .neg class hangs them below the line. */
+.wf-bars li:nth-child(1) { --v: 1.03; }
+.wf-bars li:nth-child(2) { --v: 0.64; }
+.wf-bars li:nth-child(3) { --v: 1.04; }
+.wf-bars li:nth-child(4) { --v: 2.86; }
+.wf-bars li:nth-child(5) { --v: 1.78; }
+.wf-bars li:nth-child(6) { --v: 0.96; }
+.wf-bars li:nth-child(7) { --v: 0.06; }
+.wf-bars li:nth-child(8) { --v: 0.76; }
+.wf-bars li:nth-child(9) { --v: 0.68; }
+.wf-bars li:nth-child(10) { --v: 0.16; }
+
+/* Direct labels, on the two extremes only. Text tokens, not the bar colour. */
+.wf-bars b {
+  position: absolute;
+  bottom: calc(100% + 3px);
+  left: 50%;
+  translate: -50% 0;
+  color: var(--ink);
+  font: 600 0.72rem/1 var(--sans);
+  white-space: nowrap;
+}
+
+.wf-bars .neg b {
+  top: calc(100% + 3px);
+  bottom: auto;
+}
+
+.wf-x {
+  grid-column: 2;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  padding-top: 8px;
+  color: var(--muted);
+  font: 0.68rem/1 var(--mono);
+  text-align: center;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 @media (max-width: 780px) {
@@ -1149,6 +1434,90 @@ h2 {
   min-height: 80vh;
 }
 
+/* ---- Scroll-driven polish ---------------------------------------------- */
+
+/* Everything below is tied to the scroll position by CSS alone - there is
+ * still no script. A browser without scroll-driven animations skips the
+ * whole block and shows the page as it always was, and so does anyone who
+ * asks for reduced motion. */
+@supports (animation-timeline: view()) {
+  @media screen and (prefers-reduced-motion: no-preference) {
+    /* Reading progress, drawn along the header's bottom edge. */
+    .site-header::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 -1px;
+      height: 2px;
+      background: var(--accent);
+      transform-origin: 0 50%;
+      animation: progress linear both;
+      animation-timeline: scroll(root);
+    }
+
+    /* Hero depth. Over the first screen of scrolling the glow and the dot
+     * grid fall behind the text and the rule card runs slightly ahead of
+     * it, so the three read as separate layers. */
+    .hero::before,
+    .hero::after {
+      animation: drift linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 100vh;
+    }
+
+    .hero::before { --drift: 44px; }
+    .hero::after { --drift: 150px; }
+
+    /* The card keeps its entrance; the drift is added to it. The two don't
+     * collide because one animates transform and the other translate. */
+    .rule {
+      --drift: -32px;
+      animation: rise 0.7s var(--ease) 0.15s both, drift linear both;
+      animation-timeline: auto, scroll(root);
+      animation-range: normal, 0 100vh;
+    }
+
+    /* Content fades up over the first stretch of its way into view. The
+     * range is a fixed distance, not a share of the element, so a block
+     * taller than the window isn't left half-transparent while it's read.
+     * Fill is backwards only: once a block is in, the animation lets go of
+     * it, and hover transforms and text rendering are back to normal. */
+    .section-head,
+    .prose > *,
+    .card,
+    .oss,
+    .more-list,
+    .timeline > li,
+    .rows > div,
+    .rows-title,
+    .contact > * {
+      animation: reveal linear backwards;
+      animation-timeline: view();
+      animation-range: entry 0% entry 120px;
+    }
+
+    /* overflow: hidden would make this section the scroller that view()
+     * measures against, and it never scrolls. clip trims the dot grid just
+     * the same without becoming one. */
+    .contact-section {
+      overflow: clip;
+    }
+  }
+}
+
+@keyframes progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@keyframes drift {
+  to { translate: 0 var(--drift, 0px); }
+}
+
+/* translate, not transform: .card:hover owns transform. */
+@keyframes reveal {
+  from { opacity: 0; translate: 0 14px; }
+}
+
 /* ---- Motion preferences ------------------------------------------------ */
 
 @media (prefers-reduced-motion: reduce) {
@@ -1177,6 +1546,7 @@ h2 {
     --line-strong: #c9c6bd;
     --accent: #0b7366;
     --accent-soft: #e2f1ee;
+    --chart: #0c8b79;
     --shadow: none;
   }
 
@@ -1188,9 +1558,12 @@ h2 {
     transition: none !important;
   }
 
-  /* Browsers drop backgrounds on paper; these two carry meaning. */
+  /* Browsers drop backgrounds on paper; these carry meaning. */
   .points li::before,
-  .badge {
+  .badge,
+  .wf-bars,
+  .wf-bars::before,
+  .wf-bars i {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
@@ -1211,6 +1584,25 @@ h2 {
     display: none;
   }
 
+  /* The siglint demo is content, so it prints - as dark text on paper.
+   * Re-pointing the terminal's own tokens recolours every part of it. */
+  .term {
+    --code-bg: transparent;
+    --code-line: var(--line-strong);
+    --code-ink: var(--ink-2);
+    --code-dim: var(--muted);
+    --code-val: var(--ink);
+    --code-str: var(--ink-2);
+    --code-crit: var(--ink);
+    box-shadow: none;
+    break-inside: avoid;
+  }
+
+  .term .dots { display: none; }
+  .term pre { overflow: visible; }
+  .featured { grid-template-columns: minmax(0, 1fr); }
+  .split .section-head { position: static; }
+
   .hero { padding-block: 0 20pt; }
   .hero-grid { grid-template-columns: minmax(0, 1fr); }
   .stats { margin-top: 20pt; }
@@ -1227,6 +1619,7 @@ h2 {
 
   .card,
   .oss,
+  .wf,
   .timeline > li,
   .rows > div,
   .stats > div {
