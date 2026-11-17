@@ -12,6 +12,15 @@ policy is updated to allow it.
 The one `<script>` tag in `index.html` is a JSON-LD block: structured data
 for search engines, which browsers never execute.
 
+The motion is CSS too. The reading-progress line in the header, the content
+that fades up as it scrolls into view, the layered hero and the nav marker for
+the section on screen are scroll-driven animations and scroll markers - see
+"Scroll-driven polish" in `style.css`. Browsers without those features, and
+visitors who ask for reduced motion, get the same page standing still.
+
+The terminal in the siglint card is the demo run from that repo's README,
+copied verbatim. If the tool's output changes there, update it here.
+
 | File | Purpose |
 |---|---|
 | `index.html` | The whole site. Edit content here. |

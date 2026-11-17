@@ -99,6 +99,7 @@
           <li><a href="#about">About</a></li>
           <li><a href="#work">Work</a></li>
           <li><a href="#experience">Experience</a></li>
+          <li><a href="#skills">Toolkit</a></li>
           <li><a href="#contact">Contact</a></li>
         </ul>
       </nav>
@@ -194,6 +195,24 @@
             <p>A detection-as-code CLI that scans logs against Sigma rules and pushes findings into GitHub’s Security tab via SARIF — the detection-as-code idea, shrunk to a single command you can run in CI.</p>
             <p class="stack">Python · Sigma · SARIF · GitHub Actions</p>
           </div>
+
+          <!-- The demo run from siglint's README, copied verbatim - if the
+               tool's output changes there, update it here. Unlike the hero
+               card this one is content, so screen readers get it too. The
+               line breaks sit inside the tags, as above. -->
+          <figure class="term">
+            <figcaption><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>siglint scan · README demo</figcaption>
+<pre><code><span class="l"><span class="p">$</span> siglint scan examples/auth.log -r rules</span
+><span class="l">6 finding(s) in examples/auth.log:</span
+><span class="l h">LEVEL  RULE                            COUNT  WHERE / LINE</span
+><span class="l"><span class="c">CRIT</span>   suspicious_download_pipe_shell      1  line 10</span
+><span class="l"><span class="c">CRIT</span>   uid0_account_created                1  line 9</span
+><span class="l"><span class="v">HIGH</span>   accepted_root_login                 1  line 7</span
+><span class="l"><span class="v">HIGH</span>   ssh_brute_force                     6  203.0.113.9  (within 10s)</span
+><span class="l"><span class="s">MED</span>    new_user_created                    1  line 9</span
+><span class="l"><span class="s">MED</span>    sudo_auth_failure                   1  line 8</span></code></pre>
+          </figure>
+
           <ul class="points">
             <li><strong>3,136 of 3,161</strong> SigmaHQ rules load and validate.</li>
             <li>Implements Sigma’s full condition grammar, down to <code>1 of selection_*</code>, plus modifiers like <code>windash</code>, <code>cidr</code>, and <code>re</code>.</li>
